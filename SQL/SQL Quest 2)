@@ -1,0 +1,40 @@
+     
+SELECT 
+    ROUND(cp.avg_value, 2) AS avg_value,
+    cp.category_code,
+    cp.year,
+    cp.name,
+    ROUND(cp2.combined_value, 2) AS combined_value,
+    cp2.payroll_year, ROUND((combined_value/avg_value), 2) as RESULT
+FROM (
+    SELECT 
+        cpa.category_code,
+        YEAR(cpa.date_from) AS year,
+        AVG(cpa.value) AS avg_value,
+        cpc.name
+    FROM 
+        czechia_price cpa
+    JOIN 
+        czechia_price_category cpc ON cpa.category_code = cpc.code
+    WHERE 
+        category_code IN ('111301', '114201')
+    GROUP BY 
+        category_code, YEAR(date_from)
+) AS cp
+JOIN 
+(
+    SELECT 
+        ROUND(AVG(cp.`value`), 2) AS combined_value, 
+        cp.payroll_year
+    FROM 
+        czechia_payroll cp
+    WHERE 
+        cp.unit_code = 200 
+        AND cp.calculation_code = 100 
+        AND cp.value_type_code = 5958
+        and cp.payroll_year BETWEEN 2006 AND 2018
+    GROUP BY 
+        cp.payroll_year
+) AS cp2 ON cp.year = cp2.payroll_year
+ORDER BY 
+    cp.year, cp.category_code;
