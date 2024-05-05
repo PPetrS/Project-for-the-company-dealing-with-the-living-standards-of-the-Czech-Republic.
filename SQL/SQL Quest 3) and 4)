@@ -1,0 +1,24 @@
+SELECT 
+  ROUND(AVG(cp.value), 2) AS avg_value, 
+  cp.category_code, 
+  YEAR(cp.date_from) AS year,
+  cpc.name,
+  ROUND(((ROUND(AVG(cp.value), 2) - LAG(ROUND(AVG(cp.value), 2)) 
+  OVER (PARTITION BY cp.category_code ORDER BY YEAR(cp.date_from))) / LAG(ROUND(AVG(cp.value), 2)) 
+  OVER (PARTITION BY cp.category_code ORDER BY YEAR(cp.date_from))) * 100, 2) 
+  AS growth_or_fall_percent,
+  CASE 
+  	WHEN ROUND(((ROUND(AVG(cp.value), 2) - LAG(ROUND(AVG(cp.value), 2)) 
+  	OVER (PARTITION BY cp.category_code ORDER BY YEAR(cp.date_from))) / LAG(ROUND(AVG(cp.value), 2)) 
+  	OVER (PARTITION BY cp.category_code ORDER BY YEAR(cp.date_from))) * 100, 2) > 10 THEN 'over'
+  	WHEN ROUND(((ROUND(AVG(cp.value), 2) - LAG(ROUND(AVG(cp.value), 2)) 
+  	OVER (PARTITION BY cp.category_code ORDER BY YEAR(cp.date_from))) / LAG(ROUND(AVG(cp.value), 2)) 
+  	OVER (PARTITION BY cp.category_code ORDER BY YEAR(cp.date_from))) * 100, 2) IS NULL THEN 'started'
+  	ELSE 'under'
+  END AS Higher_than_grow_payroll
+FROM 
+  czechia_price cp
+JOIN 
+  czechia_price_category cpc ON cp.category_code = cpc.code
+GROUP BY 
+  cp.category_code, YEAR(cp.date_from), cpc.name;
