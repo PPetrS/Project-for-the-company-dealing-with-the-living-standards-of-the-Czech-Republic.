@@ -1,4 +1,4 @@
--- Final SQL for quest 1)
+
    SELECT 
     combined_value,
     industry_branch_code, 
